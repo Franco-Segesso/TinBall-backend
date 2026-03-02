@@ -8,20 +8,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/usuarios")
-@CrossOrigin(origins = "*") // Para que React no tenga problemas de CORS al principio
+@RequestMapping("/api/usuarios") // Esta es la ruta base
+@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // Obtener todos los usuarios
+    // Prueba de vida: http://localhost:8080/api/usuarios/test
+    @GetMapping("/test")
+    public String test() {
+        return "El backend de TinBall está funcionando correctamente";
+    }
+
     @GetMapping
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();
     }
 
-    // Crear un nuevo usuario
     @PostMapping
     public Usuario crearUsuario(@RequestBody Usuario usuario) {
         return usuarioRepository.save(usuario);
