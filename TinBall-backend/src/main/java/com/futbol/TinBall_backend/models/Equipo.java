@@ -26,6 +26,9 @@ public class Equipo {
 
     private String descripcion;
 
+    // Agrega este campo dentro de la clase Equipo.java
+    private String fotoUrl; // URL de la imagen del equipo o escudo
+
     @ManyToMany
     @JoinTable(
       name = "equipo_jugadores", 

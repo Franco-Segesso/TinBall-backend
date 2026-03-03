@@ -34,4 +34,6 @@ public class Usuario {
     private String zona;
 
     private Integer edad;
+    // Agrega este campo dentro de la clase Usuario.java
+    private String fotoPerfilUrl; // URL de la foto del jugador
 }

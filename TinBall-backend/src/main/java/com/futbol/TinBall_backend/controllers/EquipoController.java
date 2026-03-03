@@ -1,5 +1,6 @@
 package com.futbol.TinBall_backend.controllers;
 
+import com.futbol.TinBall_backend.exceptions.ResourceNotFoundException;
 import com.futbol.TinBall_backend.models.Equipo;
 import com.futbol.TinBall_backend.models.Usuario;
 import com.futbol.TinBall_backend.repositories.EquipoRepository;
@@ -37,18 +38,17 @@ public class EquipoController {
     }
 
     // NUEVO: Endpoint para agregar un jugador a un equipo
+    // Modifica el método de agregar jugador para usar la nueva excepción
     @PostMapping("/{equipoId}/usuarios/{usuarioId}")
     public Equipo agregarJugadorAEquipo(@PathVariable Long equipoId, @PathVariable Long usuarioId) {
-        // Buscamos el equipo y el usuario por sus IDs
         Equipo equipo = equipoRepository.findById(equipoId)
-                .orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el equipo con ID: " + equipoId));
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el usuario con ID: " + usuarioId));
         
-        // Agregamos el usuario a la lista del equipo
-        equipo.getJugadores().add(usuario);
-        
-        // Guardamos los cambios
+        if (!equipo.getJugadores().contains(usuario)) {
+            equipo.getJugadores().add(usuario);
+        }
         return equipoRepository.save(equipo);
     }
 }
