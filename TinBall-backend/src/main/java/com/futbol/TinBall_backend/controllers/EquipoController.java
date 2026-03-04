@@ -1,21 +1,23 @@
 package com.futbol.TinBall_backend.controllers;
 
-import org.springframework.web.multipart.MultipartFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
-import com.futbol.TinBall_backend.exceptions.ResourceNotFoundException;
-
-
 import com.futbol.TinBall_backend.models.Equipo;
 import com.futbol.TinBall_backend.models.Usuario;
 import com.futbol.TinBall_backend.repositories.EquipoRepository;
 import com.futbol.TinBall_backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/equipos")
@@ -26,71 +28,91 @@ public class EquipoController {
     private EquipoRepository equipoRepository;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private UsuarioRepository usuarioRepository; // Importamos el repositorio de jugadores
 
     @GetMapping
-    public List<Equipo> obtenerTodos() {
+    public List<Equipo> obtenerEquipos() {
         return equipoRepository.findAll();
     }
 
-    @PostMapping
-    public Equipo crearEquipo(@RequestBody Equipo equipo) {
-        return equipoRepository.save(equipo);
-    }
-
-    // Agregar este método dentro de EquipoController.java
-    @GetMapping("/filtrar")
-    public List<Equipo> filtrarPorZona(@RequestParam String zona) {
-    return equipoRepository.findByZonaIgnoreCase(zona);
-    }
-
-    // NUEVO: Endpoint para agregar un jugador a un equipo
-    // Modifica el método de agregar jugador para usar la nueva excepción
-    @PostMapping("/{equipoId}/usuarios/{usuarioId}")
-    public Equipo agregarJugadorAEquipo(@PathVariable Long equipoId, @PathVariable Long usuarioId) {
-        Equipo equipo = equipoRepository.findById(equipoId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el equipo con ID: " + equipoId));
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el usuario con ID: " + usuarioId));
-        
-        if (!equipo.getJugadores().contains(usuario)) {
-            equipo.getJugadores().add(usuario);
+    @GetMapping("/{id}")
+    public ResponseEntity<?> obtenerEquipoPorId(@PathVariable Long id) {
+        Optional<Equipo> equipo = equipoRepository.findById(id);
+        if(equipo.isPresent()){
+            return ResponseEntity.ok(equipo.get());
         }
-        return equipoRepository.save(equipo);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Equipo no encontrado");
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarEquipo(@PathVariable Long id, @RequestBody Equipo equipoActualizado) {
+        Optional<Equipo> equipoOpt = equipoRepository.findById(id);
+        
+        if (equipoOpt.isPresent()) {
+            Equipo equipo = equipoOpt.get();
+            equipo.setNombre(equipoActualizado.getNombre());
+            equipo.setZona(equipoActualizado.getZona());
+            equipo.setNivelPromedio(equipoActualizado.getNivelPromedio());
+            equipo.setDescripcion(equipoActualizado.getDescripcion());
+            
+            equipoRepository.save(equipo);
+            return ResponseEntity.ok(equipo);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Equipo no encontrado");
+        }
+    }
+
+    // NUEVO: Método para agregar un jugador al equipo mediante su email
+    @PostMapping("/{id}/jugadores")
+    public ResponseEntity<?> agregarJugadorPorEmail(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        
+        Optional<Equipo> equipoOpt = equipoRepository.findById(id);
+        if (equipoOpt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Equipo no encontrado");
+        
+        Optional<Usuario> jugadorOpt = usuarioRepository.findByEmail(email);
+        if (jugadorOpt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe ningún jugador con ese email registrado.");
+
+        Equipo equipo = equipoOpt.get();
+        Usuario jugador = jugadorOpt.get();
+
+        // Si la lista está vacía la inicializamos para evitar errores
+        if (equipo.getJugadores() == null) {
+            equipo.setJugadores(new ArrayList<>());
+        }
+
+        // Evitamos agregar al mismo jugador dos veces
+        if (equipo.getJugadores().contains(jugador)) {
+            return ResponseEntity.badRequest().body("Este jugador ya forma parte de tu equipo.");
+        }
+
+        equipo.getJugadores().add(jugador);
+        equipoRepository.save(equipo);
+
+        return ResponseEntity.ok(equipo);
+    }
 
     @PostMapping("/{id}/foto")
-    public Equipo subirFoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-        Equipo equipo = equipoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Equipo no encontrado"));
-
-        if (file.isEmpty()) {
-            throw new RuntimeException("El archivo está vacío");
-        }
-
+    public ResponseEntity<?> subirFoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {
-            // 1. Crear la carpeta "uploads" en la raíz del proyecto si no existe
-            Path directorioImagenes = Paths.get("uploads");
-            if (!Files.exists(directorioImagenes)) {
-                Files.createDirectories(directorioImagenes);
-            }
+            Equipo equipo = equipoRepository.findById(id).orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
+            if (file.isEmpty()) return ResponseEntity.badRequest().body("Archivo vacío");
 
-            // 2. Generar un nombre único seguro (UUID)
-            String nombreArchivo = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            String rutaProyecto = System.getProperty("user.dir");
+            Path directorioImagenes = Paths.get(rutaProyecto, "uploads");
+            if (!Files.exists(directorioImagenes)) Files.createDirectories(directorioImagenes);
+
+            String nombreArchivo = UUID.randomUUID().toString() + "_" + file.getOriginalFilename().replace(" ", "_");
             Path rutaArchivo = directorioImagenes.resolve(nombreArchivo);
-
-            // 3. Copiar el archivo recibido a nuestra carpeta local
             Files.copy(file.getInputStream(), rutaArchivo);
 
-            // 4. Generar la URL final y guardarla en la base de datos SQL
             String urlFoto = "http://localhost:8080/uploads/" + nombreArchivo;
             equipo.setFotoUrl(urlFoto);
+            equipoRepository.save(equipo);
 
-            return equipoRepository.save(equipo);
-
+            return ResponseEntity.ok(equipo);
         } catch (Exception e) {
-            throw new RuntimeException("Error al guardar la foto: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir imagen: " + e.getMessage());
         }
     }
 }

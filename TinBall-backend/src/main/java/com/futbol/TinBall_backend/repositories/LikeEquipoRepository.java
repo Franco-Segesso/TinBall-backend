@@ -7,6 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface LikeEquipoRepository extends JpaRepository<LikeEquipo, Long> {
-    // Busca si ya existe un like de vuelta para confirmar el match
-    Optional<LikeEquipo> findByEquipoEmisorIdAndEquipoReceptorId(Long emisorId, Long receptorId);
+    // findFirstBy evita que Java crashee si en las pruebas guardaste el mismo like 2 veces
+    Optional<LikeEquipo> findFirstByEquipoEmisorIdAndEquipoReceptorId(Long emisorId, Long receptorId);
 }

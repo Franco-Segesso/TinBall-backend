@@ -8,4 +8,7 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmailAndPassword(String email, String password);
+    
+    // NUEVO: Para buscar al jugador y agregarlo al equipo
+    Optional<Usuario> findByEmail(String email);
 }
