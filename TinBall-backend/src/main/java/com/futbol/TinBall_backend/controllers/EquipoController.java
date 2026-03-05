@@ -107,7 +107,7 @@ public class EquipoController {
             Path rutaArchivo = directorioImagenes.resolve(nombreArchivo);
             Files.copy(file.getInputStream(), rutaArchivo);
 
-            String urlFoto = "http://localhost:8080/uploads/" + nombreArchivo;
+            String urlFoto = "https://tinball-backend-1.onrender.com/uploads/" + nombreArchivo;
             equipo.setFotoUrl(urlFoto);
             equipoRepository.save(equipo);
 

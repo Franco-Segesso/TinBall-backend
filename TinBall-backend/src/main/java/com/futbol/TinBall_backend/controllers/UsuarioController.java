@@ -1,6 +1,8 @@
 package com.futbol.TinBall_backend.controllers;
 
 import com.futbol.TinBall_backend.models.Usuario;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.futbol.TinBall_backend.models.Equipo;
 import com.futbol.TinBall_backend.repositories.UsuarioRepository;
 import com.futbol.TinBall_backend.repositories.EquipoRepository;
@@ -21,6 +23,8 @@ import java.util.UUID;
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "*")
 public class UsuarioController {
+
+    
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -67,27 +71,26 @@ public class UsuarioController {
         }
     }
 
+    @Autowired
+    private Cloudinary cloudinary;
+
     @PostMapping("/{id}/foto")
     public ResponseEntity<?> subirFoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-        try {
-            Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
-            if (file.isEmpty()) return ResponseEntity.badRequest().body("Archivo vacío");
+    try {
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+        
+        // Subimos a Cloudinary directamente
+        var uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+        String urlFoto = (String) uploadResult.get("url");
 
-            String rutaProyecto = System.getProperty("user.dir");
-            Path directorioImagenes = Paths.get(rutaProyecto, "uploads");
-            if (!Files.exists(directorioImagenes)) Files.createDirectories(directorioImagenes);
+        usuario.setFotoPerfilUrl(urlFoto);
+        usuarioRepository.save(usuario);
 
-            String nombreArchivo = UUID.randomUUID().toString() + "_" + file.getOriginalFilename().replace(" ", "_");
-            Path rutaArchivo = directorioImagenes.resolve(nombreArchivo);
-            Files.copy(file.getInputStream(), rutaArchivo);
-
-            String urlFoto = "http://localhost:8080/uploads/" + nombreArchivo;
-            usuario.setFotoPerfilUrl(urlFoto);
-            usuarioRepository.save(usuario);
-
-            return ResponseEntity.ok(usuario);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir imagen: " + e.getMessage());
-        }
+        return ResponseEntity.ok(usuario);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Error al subir a Cloudinary: " + e.getMessage());
     }
+}
 }
