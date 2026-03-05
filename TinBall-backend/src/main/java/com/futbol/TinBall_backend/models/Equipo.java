@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -38,10 +38,10 @@ public class Equipo {
     private String password;
 
     @ManyToMany
-    @JoinTable(
-      name = "equipo_jugadores", 
-      joinColumns = @JoinColumn(name = "equipo_id"), 
-      inverseJoinColumns = @JoinColumn(name = "usuario_id")
-    )
-    private List<Usuario> jugadores;
+@JoinTable(
+  name = "equipo_jugadores", 
+  joinColumns = @JoinColumn(name = "equipo_id"), 
+  inverseJoinColumns = @JoinColumn(name = "usuario_id")
+)
+private Set<Usuario> jugadores;
 }
