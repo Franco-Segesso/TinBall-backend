@@ -9,11 +9,14 @@ import jakarta.persistence.Column;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // <-- IMPORTANTE
+
 @Entity
 @Table(name = "usuarios")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true) // <-- LA SOLUCIÓN EXACTA AL ERROR 500
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +29,7 @@ public class Usuario {
     private String email;
 
     @Column(nullable = false)
-    private String password; // <-- NUEVO CAMPO
+    private String password;
 
     private String posicion; 
     private String nivel; 
