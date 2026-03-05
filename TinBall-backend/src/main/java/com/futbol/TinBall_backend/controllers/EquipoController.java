@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,7 +79,7 @@ public class EquipoController {
 
         // Si la lista está vacía la inicializamos para evitar errores
         if (equipo.getJugadores() == null) {
-            equipo.setJugadores(new ArrayList<>());
+            equipo.setJugadores(new HashSet<>());
         }
 
         // Evitamos agregar al mismo jugador dos veces
