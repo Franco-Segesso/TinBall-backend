@@ -10,18 +10,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Expone la carpeta física "uploads" hacia la URL "http://localhost:8080/uploads/"
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
     }
 
-    // NUEVO: Configuración global de CORS
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Aplica a todos los endpoints de tu API
-                .allowedOriginPatterns("*") // Permite peticiones desde cualquier lugar (Vercel, Localhost, etc)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Permite estos métodos
-                .allowedHeaders("*") // Permite cualquier cabecera
-                .allowCredentials(true); // Permite enviar cookies o tokens de autenticación
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*") // <-- CAMBIO CLAVE: Usamos patterns en lugar de origins
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
