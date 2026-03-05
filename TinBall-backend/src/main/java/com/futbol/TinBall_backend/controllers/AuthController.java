@@ -22,14 +22,13 @@ public class AuthController {
     @Autowired
     private EquipoRepository equipoRepository;
 
-    // --- CUENTAS DE TIPO EQUIPO ---
-
     @PostMapping("/registro/equipo")
     public ResponseEntity<?> registroEquipo(@RequestBody Equipo nuevoEquipo) {
         try {
-            return ResponseEntity.ok(equipoRepository.save(nuevoEquipo));
+            return ResponseEntity.ok(equipoRepository.saveAndFlush(nuevoEquipo));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al registrar equipo. ¿Email repetido?");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("ERROR DE EQUIPO: " + e.getMessage());
         }
     }
 
@@ -42,14 +41,21 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email o contraseña de equipo incorrectos");
     }
 
-    // --- CUENTAS DE TIPO JUGADOR (Usuario.java) ---
-
     @PostMapping("/registro/jugador")
     public ResponseEntity<?> registroJugador(@RequestBody Usuario nuevoJugador) {
         try {
-            return ResponseEntity.ok(usuarioRepository.save(nuevoJugador));
+            System.out.println(">>> INTENTANDO GUARDAR JUGADOR: " + nuevoJugador.getEmail());
+            // saveAndFlush fuerza a la base de datos a responder YA MISMO
+            Usuario guardado = usuarioRepository.saveAndFlush(nuevoJugador);
+            System.out.println(">>> JUGADOR GUARDADO CON ÉXITO");
+            return ResponseEntity.ok(guardado);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al registrar jugador.");
+            System.out.println(">>> EXPLOSIÓN AL GUARDAR:");
+            e.printStackTrace();
+            String causa = (e.getCause() != null) ? e.getCause().getMessage() : "Desconocida";
+            // Escupimos el error técnico crudo hacia el frontend para que lo leas
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("ERROR FATAL BD: " + e.getMessage() + " | CAUSA: " + causa);
         }
     }
 
