@@ -16,21 +16,16 @@ public class ChatController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    // 1. Inyectamos el repositorio
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload ChatMessage chatMessage) {
         
-        // 2. Le asignamos la hora exacta del servidor para evitar problemas de zonas horarias con el frontend
         chatMessage.setTimestamp(LocalDateTime.now());
-
-        // 3. Guardamos el mensaje en la base de datos SQL
         chatMessageRepository.save(chatMessage);
 
-        // 4. Retransmitimos el mensaje al canal del partido
-        String destination = "/topic/match/" + chatMessage.getMatchId();
+        String destination = "/topic/sala/" + chatMessage.getSalaId();
         messagingTemplate.convertAndSend(destination, chatMessage);
     }
 }

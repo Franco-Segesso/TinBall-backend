@@ -1,4 +1,4 @@
-package com.futbol.TinBall_backend.models; // Asegurate de que coincida con tu carpeta
+package com.futbol.TinBall_backend.models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ public class ChatMessage {
     private Long id;
 
     @Column(nullable = false)
-    private Long matchId;
+    private String salaId;
 
     @Column(nullable = false)
     private String sender;
@@ -22,24 +22,21 @@ public class ChatMessage {
 
     private LocalDateTime timestamp;
 
-    // Constructor vacío (obligatorio para Spring/JPA)
     public ChatMessage() {
     }
 
-    // Constructor con parámetros
-    public ChatMessage(Long matchId, String sender, String content, LocalDateTime timestamp) {
-        this.matchId = matchId;
+    public ChatMessage(String salaId, String sender, String content, LocalDateTime timestamp) {
+        this.salaId = salaId;
         this.sender = sender;
         this.content = content;
         this.timestamp = timestamp;
     }
 
-    // --- GETTERS Y SETTERS ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getMatchId() { return matchId; }
-    public void setMatchId(Long matchId) { this.matchId = matchId; }
+    public String getSalaId() { return salaId; }
+    public void setSalaId(String salaId) { this.salaId = salaId; }
 
     public String getSender() { return sender; }
     public void setSender(String sender) { this.sender = sender; }

@@ -9,7 +9,5 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     
-    // Magia de Spring Boot: Con solo nombrar el método así, Java ya sabe que tiene 
-    // que hacer un "SELECT * FROM chat_messages WHERE match_id = ? ORDER BY timestamp ASC"
-    List<ChatMessage> findByMatchIdOrderByTimestampAsc(Long matchId);
+    List<ChatMessage> findBySalaIdOrderByTimestampAsc(String salaId);
 }

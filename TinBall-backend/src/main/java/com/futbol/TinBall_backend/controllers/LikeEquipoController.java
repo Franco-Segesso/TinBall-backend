@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -68,5 +69,12 @@ public class LikeEquipoController {
         // Si no hay match todavía, solo guardamos nuestro like
         likeRepository.save(nuevoLike);
         return ResponseEntity.ok("Like enviado correctamente.");
+    }
+
+    // NUEVO: Endpoint para traer todos los matches de un equipo
+    @GetMapping("/mis-matches/{equipoId}")
+    public ResponseEntity<List<LikeEquipo>> obtenerMisMatches(@PathVariable Long equipoId) {
+        List<LikeEquipo> misMatches = likeRepository.findByEquipoEmisorIdAndEsMatchTrue(equipoId);
+        return ResponseEntity.ok(misMatches);
     }
 }
